@@ -1,0 +1,73 @@
+import pandas as pd
+import numpy as np
+import warnings
+warnings.filterwarnings('ignore')
+
+df = pd.read_csv("movies.csv") 
+df.head()
+
+df1 = pd.read_csv("ratings.csv")
+df1.head()
+
+#mearging both files movies.csv and ratings.csv
+data = pd.merge(df,df1) 
+data.head()
+
+# Calculating mean rating of all movies 
+data.groupby('title')['rating'].mean().sort_values(ascending=False).head()
+
+# Calculating count rating of all movies 
+data.groupby('title')['rating'].count().sort_values(ascending=False).head() 
+
+Ratings = pd.DataFrame(data.groupby('title')['rating'].mean())  
+Ratings['num of ratings'] = pd.DataFrame(data.groupby('title')['rating'].count()) 
+Ratings.head() 
+
+import matplotlib.pyplot as plt 
+import seaborn as sns 
+sns.set_style('white') 
+%matplotlib inline 
+
+# ploting graph of 'num of ratings column' 
+plt.figure(figsize =(10, 4))   
+Ratings['num of ratings'].hist(bins = 70) 
+plt.xlabel("Number Of Ratings")
+
+# plot graph of 'ratings' column 
+plt.figure(figsize =(10, 4)) 
+Ratings['rating'].hist(bins = 70)
+plt.xlabel("Rating")
+
+Movie = data.pivot_table(index ="userId",columns ='title', values ='rating')   
+Movie.head() 
+Ratings.sort_values('num of ratings', ascending = False).head(10)
+
+# analysing correlation with similar movies 
+BatmanForever_user_ratings = Movie['Batman Forever (1995)'] 
+WarforthePlanetoftheApes_user_ratings = Movie['War for the Planet of the Apes (2017)']
+BatmanForever_user_ratings.head() 
+
+# analysing correlation with similar movies 
+similar_to_BatmanForever = Movie.corrwith(BatmanForever_user_ratings) 
+similar_to_WarforthePlanetoftheApes = Movie.corrwith(WarforthePlanetoftheApes_user_ratings) 
+  
+corr_BatmanForever = pd.DataFrame(similar_to_BatmanForever, columns =['Correlation']) 
+corr_BatmanForever.dropna(inplace = True) 
+corr_BatmanForever.head() 
+
+# Similar movies like Batman Forever 
+corr_BatmanForever.sort_values('Correlation', ascending = False).head(10) 
+corr_BatmanForever = corr_BatmanForever.join(Ratings['num of ratings'])   
+corr_BatmanForever.head()
+print("Movies Similer like Batman Forever")
+corr_BatmanForever[corr_BatmanForever['num of ratings']>100].sort_values('Correlation', ascending = False).head()
+
+# Similar movies like War for the Planet of the Apes
+corr_WarforthePlanetoftheApes = pd.DataFrame(similar_to_WarforthePlanetoftheApes, columns =['Correlation']) 
+corr_WarforthePlanetoftheApes.dropna(inplace = True) 
+corr_WarforthePlanetoftheApes = corr_WarforthePlanetoftheApes.join(Ratings['num of ratings']) 
+print("Movies Similer like War for the Planet of the Apes")
+corr_WarforthePlanetoftheApes[corr_WarforthePlanetoftheApes['num of ratings']>100].sort_values('Correlation', ascending = False).head()
+
+
+
